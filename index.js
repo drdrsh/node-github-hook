@@ -75,7 +75,7 @@ function serverHandler(req, res) {
             data = Buffer.concat(buffer, bufferLength);
         }
 
-        self.getSecret(req, function (err, secret) {
+        self.getSecret(req, data, function (err, secret) {
 
             if (err) {
                 self.logger.error(Util.format('error getting secret for %s, returning 403',  res.url));
@@ -246,10 +246,10 @@ GithubHook.prototype.stop = function (callback) {
     });
 };
 
-GithubHook.prototype.getSecret = function (req, next) {
+GithubHook.prototype.getSecret = function (req, data, next) {
 
     if (typeof this.secret === 'function') {
-        return this.secret(req, next);
+        return this.secret(req, data, next);
     }
     return next(null, this.secret);
 };
