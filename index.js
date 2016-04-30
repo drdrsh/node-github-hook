@@ -75,7 +75,19 @@ function serverHandler(req, res) {
             data = Buffer.concat(buffer, bufferLength);
         }
 
-        self.getSecret(req, data, function (err, secret) {
+        var parsedData = null;
+        if (isForm) {
+            parsedData = Querystring.parse(data).payload;
+        }
+        parsedData = parse(data);
+        
+        // invalid json
+        if (!parsedData) {
+            self.logger.error(Util.format('received invalid data from %s, returning 400', remoteAddress));
+            return reply(400, res);
+        }
+        
+        self.getSecret(req, parsedData, function (err, secret) {
 
             if (err) {
                 self.logger.error(Util.format('error getting secret for %s, returning 403',  res.url));
@@ -100,17 +112,7 @@ function serverHandler(req, res) {
                 }
             }
 
-            if (isForm) {
-                data = Querystring.parse(data).payload;
-            }
-            data = parse(data);
-
-
-            // invalid json
-            if (!data) {
-                self.logger.error(Util.format('received invalid data from %s, returning 400', remoteAddress));
-                return reply(400, res);
-            }
+            data = parsedData;
 
             data.request = req;
             var event = req.headers['x-github-event'] || (req.headers['x-gitlab-event'] ? req.headers['x-gitlab-event'].split(' ')[0].toLowerCase() : 'unknown');
